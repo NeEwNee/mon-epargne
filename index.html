@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Épargne">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="color-scheme" content="dark">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Mon Épargne</title>
+<style>
+:root{--bg:#0b0b0d;--card:#161618;--muted:#92929c;--text:#f5f5f7;--green:#35d07f;--red:#ff6268;--line:#29292e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif}
+main{max-width:520px;margin:auto;padding:16px 16px 70px}header{padding:10px 3px 18px;display:flex;justify-content:space-between}
+h1{font-size:30px;margin:0}.date{color:var(--muted);font-size:14px;margin-top:4px}
+.card{background:var(--card);border-radius:22px;padding:19px;margin:11px 0}.balance{font-size:38px;font-weight:800}.gain{color:var(--green);font-weight:700;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}.mini{background:#1d1d20;border-radius:16px;padding:14px}.mini span{color:var(--muted);font-size:13px}.mini b{display:block;font-size:20px;margin-top:5px}
+.title{font-size:20px;font-weight:800;margin:24px 4px 9px}canvas{width:100%;height:210px;border-radius:17px;background:#101012}
+label{display:block;color:#bdbdc5;font-size:14px;margin:11px 0 5px}input{width:100%;padding:14px;border:1px solid #303035;background:#101012;color:white;border-radius:14px;font-size:17px}
+button{width:100%;padding:15px;border:0;border-radius:16px;font-size:16px;font-weight:750;cursor:pointer}.primary{background:#f2f2f4;color:#111}.secondary{background:#27272b;color:white}.danger{background:#2b181a;color:#ff8a8f}
+.hint{color:var(--muted);font-size:13px;line-height:1.4}.entry{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.thumb{width:58px;height:58px;border-radius:12px;object-fit:cover;background:#242428}.entrymain{flex:1}.entrymain b{display:block}.entrymain small{display:block;color:var(--muted);margin-top:4px}.up{color:var(--green)}.down{color:var(--red)}
+
+.entry-actions{display:flex;gap:7px;margin-top:8px}
+.smallbtn{width:auto;padding:7px 10px;border-radius:10px;font-size:12px;background:#27272b;color:white}
+.deletebtn{color:#ff8a8f}
+#entryDate{color-scheme:dark}
+@media (max-width:380px){.balance{font-size:32px}.entry{gap:8px}.thumb{width:50px;height:50px}}
+
+<style>
+html{background:var(--bg);-webkit-text-size-adjust:100%;overscroll-behavior-y:none}
+body{min-height:100dvh;overscroll-behavior-y:none}
+body,.card,input,button{-webkit-tap-highlight-color:transparent}
+main{max-width:560px;padding:
+  max(12px,env(safe-area-inset-top))
+  16px
+  calc(92px + env(safe-area-inset-bottom))
+  16px}
+header{padding:8px 2px 14px;align-items:center}
+h1{font-size:29px;letter-spacing:-.7px}
+.date{text-transform:capitalize}
+.card{border:1px solid rgba(255,255,255,.045);box-shadow:0 10px 35px rgba(0,0,0,.18)}
+.balance{font-size:clamp(34px,10vw,46px);letter-spacing:-1.5px}
+.gain{font-size:15px}
+.grid{gap:9px}
+.mini{min-height:76px;display:flex;flex-direction:column;justify-content:center}
+.mini b{font-variant-numeric:tabular-nums}
+.title{margin-top:22px}
+canvas{height:220px}
+input{min-height:50px;appearance:none;-webkit-appearance:none}
+button{min-height:50px;touch-action:manipulation}
+.entry{min-height:76px}
+.thumb{flex:none}
+.entrymain{min-width:0}
+.entrymain b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-actions .smallbtn{min-height:34px}
+#history{padding-top:5px;padding-bottom:5px}
+.install-tip{background:linear-gradient(135deg,#1c1c20,#141416);border:1px solid #303035;border-radius:18px;padding:14px 15px;margin:8px 0 18px;font-size:13px;line-height:1.45;color:#d7d7dc}
+.install-tip b{color:#fff}
+.install-tip .share{font-size:18px;vertical-align:-2px}
+.sticky-save{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:
+  10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,rgba(11,11,13,.97) 28%);
+  pointer-events:none}
+.sticky-save button{max-width:528px;margin:auto;display:block;box-shadow:0 8px 28px rgba(0,0,0,.35);pointer-events:auto}
+@media (max-width:380px){
+  main{padding-left:12px;padding-right:12px}
+  .balance{font-size:32px}
+  .card{padding:16px}
+  .entry{gap:8px}
+  .thumb{width:50px;height:50px}
+}
+@media (min-width:600px){.sticky-save{display:none}}
+</style>
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>Mon Épargne</h1><div class="date" id="date"></div></div><div style="font-size:28px">📈</div></header>
+<div class="install-tip"><b>📱 Pour l’utiliser comme une vraie app</b><br>
+Dans Safari : <span class="share">↑</span> <b>Partager</b> → <b>Sur l’écran d’accueil</b>. Ensuite, ouvre « Épargne » depuis ton écran d’accueil.</div>
+
+<section class="card">
+<div class="balance" id="total">0,00 €</div>
+<div class="gain" id="gain">+0,00 €</div>
+<div class="grid"><div class="mini"><span>Dernier versement</span><b id="deposit">0 €</b></div><div class="mini"><span>Jours suivis</span><b id="days">0</b></div></div>
+</section>
+
+<div class="title">Évolution</div><section class="card"><canvas id="chart" width="900" height="420"></canvas></section>
+
+<div class="title">Ajouter aujourd’hui</div>
+<section class="card">
+<label>Date</label><input id="entryDate" type="date"><label>Montant total</label><input id="amount" inputmode="decimal" placeholder="2304,87">
+<label>Versement du jour</label><input id="dep" inputmode="decimal" placeholder="100">
+<label>Capture d’écran</label><input id="photo" type="file" accept="image/*">
+<button class="primary" style="margin-top:14px" onclick="add()">Enregistrer la journée</button>
+<p class="hint">La capture est stockée séparément du texte pour éviter les problèmes de mémoire de l’iPhone.</p>
+</section>
+
+<div class="title">Historique</div><section class="card" id="history"></section>
+<button class="secondary" onclick="exportData()" style="margin-top:10px">Exporter mes données</button>
+<button class="danger" onclick="wipe()" style="margin-top:10px">Effacer l’historique</button>
+</main>
+<div class="sticky-save"><button class="primary" onclick="document.getElementById('amount').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>document.getElementById('amount').focus(),350)">＋ Ajouter une journée</button></div>
+
+<script>
+const STORAGE_KEY="mon_epargne_v3";
+let data=[];
+let memoryFallback=null;
+
+const euro=n=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(Number(n)||0);
+const today=()=>{
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+const parseMoney=v=>{
+  if(v==null)return NaN;
+  let s=String(v).trim().replace(/\s/g,"").replace(/€/g,"");
+  if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");
+  else s=s.replace(",",".");
+  return Number(s);
+};
+
+document.getElementById("entryDate").value=today();
+document.getElementById("amount").setAttribute("enterkeyhint","done");
+document.getElementById("dep").setAttribute("enterkeyhint","done");
+document.getElementById("date").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+
+function storageGet(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    return raw?JSON.parse(raw):[];
+  }catch(e){
+    return memoryFallback||[];
+  }
+}
+function storageSet(arr){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(arr));
+    memoryFallback=arr;
+    return true;
+  }catch(e){
+    memoryFallback=arr;
+    return false;
+  }
+}
+function normalize(){
+  data=storageGet().sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function fileToDataURL(file){
+  return new Promise(resolve=>{
+    if(!file){resolve(null);return}
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1000;
+        const scale=Math.min(1,max/img.width,max/img.height);
+        const w=Math.max(1,Math.round(img.width*scale));
+        const h=Math.max(1,Math.round(img.height*scale));
+        const c=document.createElement("canvas");
+        c.width=w;c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(c.toDataURL("image/jpeg",.65));
+      };
+      img.onerror=()=>resolve(null);
+      img.src=r.result;
+    };
+    r.onerror=()=>resolve(null);
+    r.readAsDataURL(file);
+  });
+}
+
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+async function add(){
+  const amount=parseMoney(document.getElementById("amount").value);
+  const depRaw=document.getElementById("dep").value;
+  const dep=depRaw.trim()===""?0:parseMoney(depRaw);
+  const date=document.getElementById("entryDate").value||today();
+
+  if(!Number.isFinite(amount)||amount<0){alert("Entre un montant total valide.");return}
+  if(!Number.isFinite(dep)||dep<0){alert("Entre un versement valide.");return}
+
+  const old=data.find(x=>x.date===date);
+  let photo=old?.photo||null;
+  const file=document.getElementById("photo").files[0];
+
+  try{
+    if(file) photo=await fileToDataURL(file);
+    const next=data.filter(x=>x.date!==date);
+    next.push({date,amount,deposit:dep,photo});
+    next.sort((a,b)=>a.date.localeCompare(b.date));
+
+    const saved=storageSet(next);
+    data=next;
+
+    document.getElementById("amount").value="";
+    document.getElementById("dep").value="";
+    document.getElementById("photo").value="";
+    document.getElementById("entryDate").value=today();
+
+    await render();
+    window.scrollTo({top:0,behavior:"smooth"});
+
+    if(saved){
+      alert(old?"Journée mise à jour ✅":"Journée enregistrée ✅");
+    }else{
+      alert("Journée enregistrée pour cette session, mais le navigateur bloque le stockage. Ouvre le fichier directement dans Safari pour conserver les données.");
+    }
+  }catch(e){
+    console.error(e);
+    alert("Erreur : la journée n’a pas pu être enregistrée. Essaie sans capture d’écran.");
+  }
+}
+
+async function editEntry(date){
+  const x=data.find(e=>e.date===date);
+  if(!x)return;
+  document.getElementById("amount").value=String(x.amount).replace(".",",");
+  document.getElementById("dep").value=String(x.deposit||0).replace(".",",");
+  document.getElementById("entryDate").value=x.date;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function deleteEntry(date){
+  if(!confirm("Supprimer cette journée de l’historique ?"))return;
+  const next=data.filter(x=>x.date!==date);
+  storageSet(next);
+  data=next;
+  await render();
+}
+
+async function render(){
+  normalize();
+  const last=data[data.length-1],first=data[0];
+  document.getElementById("total").textContent=last?euro(last.amount):"0,00 €";
+  const gain=last&&first?last.amount-first.amount:0;
+  document.getElementById("gain").textContent=(gain>=0?"+":"")+euro(gain);
+  document.getElementById("deposit").textContent=last?euro(last.deposit):"0,00 €";
+  document.getElementById("days").textContent=data.length;
+
+  const history=document.getElementById("history");
+  if(!data.length){
+    history.innerHTML='<div class="hint">Aucune journée enregistrée.</div>';
+  }else{
+    history.innerHTML=data.slice().reverse().map((x,i)=>{
+      const idx=data.findIndex(e=>e.date===x.date);
+      const prev=idx>0?data[idx-1]:null;
+      const delta=prev?x.amount-prev.amount:0;
+      const label=new Date(x.date+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+      return `<div class="entry">
+        <div class="thumb" id="p${i}"></div>
+        <div class="entrymain">
+          <b>${escapeHTML(label)}</b>
+          <small>${euro(x.amount)} · versement ${euro(x.deposit)}</small>
+          <div class="entry-actions">
+            <button class="smallbtn" onclick="editEntry('${x.date}')">Modifier</button>
+            <button class="smallbtn deletebtn" onclick="deleteEntry('${x.date}')">Supprimer</button>
+          </div>
+        </div>
+        <strong class="${delta>=0?"up":"down"}">${prev?(delta>=0?"+":"")+euro(delta):"—"}</strong>
+      </div>`;
+    }).join("");
+
+    data.slice().reverse().forEach((x,i)=>{
+      if(x.photo){
+        const el=document.getElementById("p"+i);
+        if(el){
+          el.style.backgroundImage=`url("${x.photo}")`;
+          el.style.backgroundSize="cover";
+          el.style.backgroundPosition="center";
+        }
+      }
+    });
+  }
+  draw();
+}
+
+function draw(){
+  const c=document.getElementById("chart"),ctx=c.getContext("2d"),rect=c.getBoundingClientRect();
+  const ratio=window.devicePixelRatio||1;
+  const w=Math.max(300,Math.round(rect.width*ratio)),h=Math.max(210,Math.round(210*ratio));
+  c.width=w;c.height=h;ctx.clearRect(0,0,w,h);
+  if(data.length<2){
+    ctx.fillStyle="#777";ctx.font=`${18*ratio}px Arial`;ctx.textAlign="center";
+    ctx.fillText("Ajoute 2 jours pour voir l’évolution",w/2,h/2);return;
+  }
+  const vals=data.map(x=>Number(x.amount)),mn=Math.min(...vals),mx=Math.max(...vals),p=35*ratio,range=mx-mn||1;
+  ctx.strokeStyle="#29292e";ctx.lineWidth=ratio;
+  for(let i=0;i<4;i++){const y=p+i*(h-2*p)/3;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke();}
+  ctx.strokeStyle="#35d07f";ctx.lineWidth=3*ratio;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();
+  data.forEach((x,i)=>{
+    const X=p+i*(w-2*p)/(data.length-1),Y=p+(mx-x.amount)*(h-2*p)/range;
+    i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);
+  });ctx.stroke();
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data.map(x=>({date:x.date,amount:x.amount,deposit:x.deposit})),null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="mon-epargne.json";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function wipe(){
+  if(!data.length){alert("L’historique est déjà vide.");return}
+  if(confirm("Effacer TOUT l’historique et les captures ?")){
+    storageSet([]);data=[];render();
+  }
+}
+
+window.addEventListener("resize",draw);
+render();
+</script>
+</body>
+</html>
